@@ -1,0 +1,152 @@
+import base64
+import sys
+import os
+import json
+import asyncio
+import time
+
+from websockets.sync.client import connect
+from typing import List, Union, Dict, Any
+from boilerplate import API
+
+from novelai_api.BanList import BanList
+from novelai_api.BiasGroup import BiasGroup
+from novelai_api.GlobalSettings import GlobalSettings
+from novelai_api.Preset import Model, Preset
+from novelai_api.Tokenizer import Tokenizer
+from novelai_api.utils import b64_to_tokens, tokens_to_b64
+
+os.system('title w-AI-fu NovelAI LLM')
+
+# Define banned words or phrases
+bad_words: BanList = BanList(
+    ':', ' :', '::', ' ::', '*:', ';', ' ;', ';;', ' ;;', '#', ' #', '|', ' |', 
+    '{', ' {', '}', ' }', '[', ' [', ']', ' ]', '\\', ' \\', '/', ' /', '*', 
+    ' *', '~', ' ~', 'bye', ' bye', 'Bye', ' Bye', 'goodbye', ' goodbye', 
+    'Goodbye', ' Goodbye', 'goodbye', ' goodnight', 'Goodnight', ' Goodnight', 
+    'www', ' www', 'http', ' http', 'https', ' https', '.com', '.org', '.net'
+)
+
+async def handle(message: str, websocket, api_handler: API):
+    split_message = message.split(' ')
+    prefix = split_message[0]
+    split_message.remove(prefix)
+    payload = ' '.join(split_message)
+    
+    match prefix:
+        case "GENERATE":
+            await prepare_generate(payload, websocket, api_handler)
+
+async def prepare_generate(payload, websocket, api_handler: API):
+    parsed = json.loads(payload)
+    prompt = parsed["prompt"]
+    llm_params = parsed["config"]
+    response = ''
+    
+    try:
+        response = "TEXT " + await generate(prompt, llm_params, api_handler)
+    except Exception as e:
+        if len(e.args) < 2:
+            print(e, file=sys.stderr)
+            response = "ERROR UNDEFINED Could not get information about this error. Sorry."
+        else:
+            match e.args[1]:
+                case 401:
+                    response = "ERROR WRONG_AUTH Missing or incorrect NovelAI token."
+                case 502:
+                    response = "ERROR RESPONSE_FAILURE API responded with 502. Service may be down or temporarily inaccessible."
+                case _:
+                    print(e, file=sys.stderr)
+                    response = "ERROR UNDEFINED " + str(e)
+    
+    websocket.send(response)
+
+async def generate(custom_prompt: Union[str, List[int]], parameters: Dict[str, Any], api_handler: API) -> str:
+    global bad_words
+
+    novel_api = api_handler.api
+    model = Model.Kayra
+    preset = Preset.from_official(model, "Carefree")
+    
+    # Set preset parameters based on provided configurations
+	preset.max_length = parameters["max_output_length"]
+    preset.repetition_penalty = parameters["repetition_penalty"]
+    preset.temperature = parameters["temperature"]
+    preset.length_penalty = parameters["length_penalty"]
+
+    # Updated Parameters
+    params = {
+        "bad_words_ids": [[]],
+        "cfg_scale": preset.cfg_scale,
+        "generate_until_sentence": True,
+        "logit_bias_exp": [{"bias": 0, "ensure_sequence_finish": True, "generate_once": True, "sequence": [0]}],
+        "max_length": preset.max_length,
+        "min_length": preset.min_length,
+        "num_logprobs": -1,
+        "order": preset.order,
+        "phrase_rep_pen": preset.phrase_rep_pen,
+        "repetition_penalty": preset.repetition_penalty,
+        "stop_sequences": preset.stop_sequences,
+        "tail_free_sampling": preset.tail_free_sampling,
+        "temperature": preset.temperature,
+        "top_a": preset.top_a,
+        "top_k": preset.top_k,
+        "top_p": preset.top_p,
+        "use_string": False
+    }
+
+    # Make Base64
+    if isinstance(custom_prompt, str):
+        prompt = Tokenizer.encode(model, custom_prompt)
+    else:
+        prompt = custom_prompt
+
+    prompt_b64 = tokens_to_b64(prompt, 4 if model is Model.Erato else 2)
+    data = {"input": prompt_b64, "model": model.value, "parameters": params}
+    
+    # Determine the correct endpoint based on model type
+    endpoint = "/ai/generate-stream" if parameters.get("stream", False) else "/ai/generate"
+    base_address = "https://text.novelai.net" if model in (Model.Kayra, Model.Erato) else "https://api.novelai.net"
+
+    generated_text = ""
+    current_sentence = ""
+    
+    # Processing response from NovelAI API, handling streaming as required
+    async for rsp, content in novel_api.request("post", endpoint, data, base_address):
+        novel_api._treat_response_object(rsp, content, 200 if model in (Model.Kayra, Model.Erato) else 201)
+        
+        if parameters.get("stream", False):
+            try:
+                token = b64_to_tokens(content["token"])
+                decoded_token = Tokenizer.decode(model, token)
+                current_sentence += decoded_token
+                generated_text += decoded_token
+                
+                if any(punct in decoded_token for punct in [".", "!", "?", ",", ";"]):
+                    print(f"AI: {current_sentence.strip()}")
+                    current_sentence = ""
+            except json.JSONDecodeError as e:
+                print(f"JSON decoding error: {e}", file=sys.stderr)
+        else:
+            token = b64_to_tokens(content["output"])
+            decoded_token = Tokenizer.decode(model, token)
+            generated_text += decoded_token.split("\n")[0] if "\n" in decoded_token else decoded_token
+
+    return generated_text
+
+async def main():
+    with connect("ws://localhost:8765") as websocket:
+        try:
+            async with API("https://text.novelai.net") as api_handler:
+                while True:
+                    await handle(websocket.recv(), websocket, api_handler)
+        except Exception as e:
+            if len(e.args) >= 2 and e.args[1] == 401:
+                while True:
+                    websocket.recv()
+                    websocket.send("ERROR WRONG_AUTH Missing or incorrect NovelAI token.")
+            else:
+                websocket.send("ERROR UNDEFINED " + str(e))
+
+if __name__ == '__main__':
+    asyncio.run(main())

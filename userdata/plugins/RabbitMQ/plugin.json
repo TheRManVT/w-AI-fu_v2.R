@@ -1,0 +1,20 @@
+{
+    "name": "RabbitMQ Client Plugin",
+    "description": "Adds support for communication with a RabbitMQ server.",
+    "author": "w-AI-fu_DEV",
+    "version": "1.0.0",
+    "npm-dependencies": {
+        "amqplib": "^0.10.3"
+    },
+    "subscribes": {
+        "load": "onLoad",
+        "main-loop-start": "",
+        "input-source": "onInputQuery",
+        "command-handling": "",
+        "response-handling": "onResponse",
+        "main-loop-end": "onMainLoopEnd",
+        "quit": "onQuit",
+        "interrupt": ""
+    },
+    "activated": false
+}

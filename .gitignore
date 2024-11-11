@@ -1,0 +1,7 @@
+bin/ffmpeg/ffmpeg.exe
+source/app/vectordb/database.txt
+source/app/vectordb/venv
+venv
+node_modules
+logs/*
+package-lock.json

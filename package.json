@@ -1,0 +1,25 @@
+{
+  "name": "w-ai-fu",
+  "version": "2.0.7",
+  "description": "AI Vtuber program.",
+  "main": "source/app/entry/index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npx tsc"
+  },
+  "author": "wAIfu_DEV",
+  "license": "GPL-3.0-or-later",
+  "devDependencies": {
+    "@types/ws": "8.5.8",
+    "amqplib": "0.10.3",
+    "typescript": "5.1.6"
+  },
+  "dependencies": {
+    "@types/extract-zip": "^2.0.1",
+    "electron": "27.0.2",
+    "extract-zip": "2.0.1",
+    "microsoft-cognitiveservices-speech-sdk": "1.32.0",
+    "openai": "4.0.0",
+    "ws": "8.14.2"
+  }
+}
