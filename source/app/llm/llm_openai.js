@@ -7,7 +7,7 @@ const llm_interface_1 = require("./llm_interface");
 const openai_1 = require("openai");
 const io_1 = require("../io/io");
 const characters_1 = require("../characters/characters");
-const GENERATION_TIMEOUT_MS = 10_000;
+const GENERATION_TIMEOUT_MS = 30_000;
 class LargeLanguageModelOpenAI {
     #openai_api;
     constructor() {
