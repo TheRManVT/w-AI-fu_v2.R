@@ -7,3 +7,23 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 
 > [!NOTE]
 > Please don't tell DEV about this. I only uploaded it for the people, who have to reinstall the program but deleted the original downloaded ZIP
+
+
+## Installation
+1. Download the ZIP through the button on the top and extract it.
+2. Install Python 3.10.X (preferably .11) and [NodeJS v19.18.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
+3. Install the VC++ Build Tools (Guide on how is [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/))
+4. Reboot your PC, just in case
+5. Install w-AI-fu through INSTALL.BAT
+6. Wait till it's completed
+7. Run it through the created shortcut
+
+## Knwon issuses
+- You get a JavaScript error when starting w-AI-fu
+  - **SHOULD** be fixed in this version
+- You get stuck on "Creating Electron window" after restarting
+  - Run venv.bat, which deletes the venv-folder inside source/app/vectordb
+
+-----
+
+### If you need help, don't be afraid to contact me
