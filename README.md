@@ -22,7 +22,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 - You get a JavaScript error when starting w-AI-fu
   - **SHOULD** be fixed in this version
 - You get stuck on "Creating Electron window" after restarting
-  - Run venv.bat, which deletes the venv-folder inside source/app/vectordb
+  - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
 
 -----
 
