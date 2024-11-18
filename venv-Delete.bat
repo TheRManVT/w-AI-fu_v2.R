@@ -22,6 +22,7 @@ if exist "%targetFolder%" (
 ) else (
     title w-AI-fu - Folder not found
     echo Folder not found: %targetFolder%
+    echo Please only run this, if the error occurs and the folder was created by w-AI-fu
 )
 
 pause
