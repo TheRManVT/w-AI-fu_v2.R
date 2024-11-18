@@ -16,8 +16,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 4. Reboot your PC, just in case
 5. Install w-AI-fu through INSTALL.BAT
 6. Wait till it's completed
-7. Copy the "novelai_api"-folder into "venv\Lib\site-packages" (if you want to use NovelAI's model Kayra)
-8. Run it through the created shortcut
+7. Run it through the created shortcut
 
 ## Knwon issuses
 - You get a JavaScript error when starting w-AI-fu
