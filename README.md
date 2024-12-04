@@ -8,16 +8,6 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 > [!NOTE]
 > Please don't tell DEV about this. I only uploaded it for the people, who have to reinstall the program but deleted the original downloaded ZIP
 
-
-## Installation
-1. Download the ZIP through the button on the top and extract it.
-2. Install Python 3.10.X (preferably .11) and [NodeJS v19.18.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
-3. Install the VC++ Build Tools (Guides on how are [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/) and [here](https://hub.tcno.co/software/vs/buildtools/))
-4. Reboot your PC, just in case
-5. Install w-AI-fu through INSTALL.BAT
-6. Wait till it's completed
-7. Run it through the created shortcut
-
 ## Knwon issuses
 - You get a JavaScript error when starting w-AI-fu
   - **SHOULD** be fixed in this version
@@ -31,6 +21,15 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
   - If you have the original w-AI-fu, then just copy-paste the userdata folder from the original into this verison (Better to not overwrite things, though)
 - My AI has forgotten everything
   - Copy the database.txt from source/app/vectordb in the original version of w-AI-fu and put it into the same folder again in this version
+
+## Installation
+1. Download the ZIP through the button on the top and extract it.
+2. Install Python 3.10.X (preferably .11) and [NodeJS v19.18.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
+3. Install the VC++ Build Tools (Guides on how are [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/) and [here](https://hub.tcno.co/software/vs/buildtools/))
+4. Reboot your PC, just in case
+5. Install w-AI-fu through INSTALL.BAT
+6. Wait till it's completed
+7. Run it through the created shortcut
 
 -----
 
