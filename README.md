@@ -24,7 +24,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 - You get stuck on "Creating Electron window" after restarting
   - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
 - I want to use NovelAI but they changed their API endpoint
-  - Just copy the novelai_api-folder from the base into "venv\Lib\site-packages" (backup the original though, just in case)
+  - Just copy the novelai_api-folder from the base into "venv\Lib\site-packages" (backup the original and the".dist-info"-folder though, just in case)
 - It shows me an error about ffmpeg
   - You have to download the [ffmpeg executable](https://www.ffmpeg.org/download.html) and put it into "bin/ffmpeg" before starting
 
