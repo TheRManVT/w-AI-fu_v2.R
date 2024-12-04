@@ -27,6 +27,10 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
   - Just copy the novelai_api-folder from the base into "venv\Lib\site-packages" (backup the original and the".dist-info"-folder though, just in case)
 - It shows me an error about ffmpeg
   - You have to download the [ffmpeg executable](https://www.ffmpeg.org/download.html) and put it into "bin/ffmpeg" before starting
+- My AI is now back before I created them
+  - If you have the original w-AI-fu, then just copy-paste the userdata folder from the original into this verison (Better to not overwrite things, though)
+- My AI has forgotten everything
+  - Copy the database.txt from source/app/vectordb in the original version of w-AI-fu and put it into the same folder again in this version
 
 -----
 
