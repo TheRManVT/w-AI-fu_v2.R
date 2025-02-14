@@ -14,7 +14,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 - You get stuck on "Creating Electron window" after restarting
   - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
 - I want to use NovelAI but they changed their API endpoint
-  - Just copy the novelai_api-folder from the base into "venv\Lib\site-packages" (backup the original and the".dist-info"-folder though, just in case)
+  - Just copy the novelai_api-folder from the base(or download the folder from [their repo](https://github.com/Aedial/novelai-api) into "venv\Lib\site-packages" (move the original and the".dist-info"-folder to a different place though, just in case)
 - It shows me an error about ffmpeg
   - You have to download the [ffmpeg executable](https://www.ffmpeg.org/download.html) and put it into "bin/ffmpeg" before starting
 - My AI is now back before I created them
@@ -25,7 +25,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 ## Installation
 1. Download the ZIP through the button on the top and extract it.
 2. Install Python 3.10.X (preferably .11) and [NodeJS v19.18.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
-3. Install the VC++ Build Tools (Guides on how are [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/) and [here](https://hub.tcno.co/software/vs/buildtools/))
+3. Install the VC++ Build Tools (Guides, on how, are [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/) and [here](https://hub.tcno.co/software/vs/buildtools/))
 4. Reboot your PC, just in case
 5. Install w-AI-fu through INSTALL.BAT
 6. Wait till it's completed
