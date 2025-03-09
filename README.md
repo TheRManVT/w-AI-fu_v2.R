@@ -24,7 +24,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 
 ## Installation
 1. Download the ZIP through the button on the top and extract it.
-2. Install Python 3.10.X (preferably .11) and [NodeJS v19.18.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
+2. Install Python 3.10.X (preferably .11) and [NodeJS v19.8.1](https://nodejs.org/en/download/releases) (Install through the .msi-Installer)
 3. Install the VC++ Build Tools (Guides, on how, are [here](https://www.pythondiscord.com/pages/tags/microsoft-build-tools/) and [here](https://hub.tcno.co/software/vs/buildtools/))
 4. Reboot your PC, just in case
 5. Install w-AI-fu through INSTALL.BAT
