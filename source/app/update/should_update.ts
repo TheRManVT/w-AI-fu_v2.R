@@ -12,7 +12,7 @@ export async function checkUpdates(): Promise<void> {
     let query: Response;
     try {
         query = await fetch(
-            "https://api.github.com/repos/wAIfu-DEV/w-AI-fu_v2/tags"
+            "https://api.github.com/repos/TheRManVT/w-AI-fu_v2.R/tags"
         );
     } catch (e) {
         IO.warn(

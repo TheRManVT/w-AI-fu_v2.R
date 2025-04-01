@@ -32,7 +32,7 @@ async function checkUpdates() {
         return;
     let query;
     try {
-        query = await fetch("https://api.github.com/repos/wAIfu-DEV/w-AI-fu_v2/tags");
+        query = await fetch("https://api.github.com/repos/TheRManVT/w-AI-fu_v2.R/tags");
     }
     catch (e) {
         io_1.IO.warn("Error: Could not contact github while trying to get latest version.");
