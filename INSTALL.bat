@@ -45,7 +45,12 @@ if %errorlevel% neq 0 (
 
 ::INSTALL PIP PACKAGES
 echo Installing python dependencies ...
+%PIP_PATH% install novelai_api==0.31.0
 call %PIP_PATH% install -r requirements.txt
+del %CWD%\venv\Lib\site-packages\novelai_api
+del %CWD%\venv\Lib\site-packages\novelai_api-0.22.0.dist-info
+mv -y novelai_api %CWD%\venv\Lib\site-packages\
+
 ::call %PIP_PATH% install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 ::CREATE SHORTCUT
