@@ -10,7 +10,7 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 
 ## Knwon issuses
 - You get a JavaScript error when starting w-AI-fu
-  - **SHOULD** be fixed in this version
+  - **SHOULD** be fixed in this version*
 - You get stuck on "Creating Electron window" after restarting
   - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
 - I want to use NovelAI but they changed their API endpoint
@@ -48,3 +48,6 @@ After that is done, just copy the novelai_api-folder from the base(or download t
 
 ### If you need help, don't be afraid to contact me
 
+*The R-Man and his associates are not responsible it it doesn't work.
+This repo is only for mainting the program as it was before the privating of the original repo.
+Any programmming errors, which are not listed here, are AS IS from w-AI-fu-DEV and therefore will not be fixed
