@@ -1,6 +1,6 @@
 vectordb2==0.1.9
 websockets==11.0.3
-git+https://github.com/vioshyvo/mrpt/
+git+https://github.com/vioshyvo/mrpt.git@ec5ebda6fa48a0daf57f56afbe59e1f0fdd986d9
 absl-py==2.1.0
 astunparse==1.6.3
 cachetools==5.3.3
