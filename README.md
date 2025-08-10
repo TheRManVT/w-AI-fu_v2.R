@@ -48,6 +48,7 @@ After that is done, just copy the novelai_api-folder from the base(or download t
 
 ### If you need help, don't be afraid to contact me
 
-*The R-Man and his associates are not responsible it it doesn't work.
+*The R-Man and his associates are not responsible if it doesn't work.
 This repo is only for mainting the program as it was before the privating of the original repo.
 Any programmming errors, which are not listed here, are AS IS from w-AI-fu-DEV and therefore will not be fixed
+
