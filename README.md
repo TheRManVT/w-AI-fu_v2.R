@@ -27,7 +27,7 @@ this installs some depedenciese needed for this version to work. Then reinstall 
 cd install/
 pip install -r requirements.txt
 ```
-After that is done, just copy the novelai_api-folder from the base(or download the folder from [their repo](https://github.com/Aedial/novelai-api)) into "venv\Lib\site-packages" and start w-AI-fu
+After that is done, just copy the novelai_api-folder from the base(or download the folder from [their repo]([https://github.com/Aedial/novelai-api](https://github.com/Aedial/novelai-api/archive/refs/tags/v0.31.0.zip))) into "venv\Lib\site-packages" and start w-AI-fu
 - It shows me an error about ffmpeg
   - You have to download the [ffmpeg executable](https://www.ffmpeg.org/download.html) and put it into "bin/ffmpeg" before starting
 - My AI is now back before I created them
@@ -47,3 +47,4 @@ After that is done, just copy the novelai_api-folder from the base(or download t
 -----
 
 ### If you need help, don't be afraid to contact me
+
