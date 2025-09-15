@@ -5,8 +5,23 @@ import pyaudio
 import wave
 import threading
 import time
+import re
 
 from websockets.sync.client import connect
+
+# Dictionary of words to replace
+# e.g. said "Ronika", get recognized as "Ronica", will be replaced to "Ronika" which gets send to the AI
+word_replacements = {
+    "From speech": "To AI"
+}
+
+# Logic for replacing words
+def apply_replacements(text: str) -> str:
+    for word, replacement in word_replacements.items():
+        # \b ensures whole word match, re.IGNORECASE makes it case-insensitive
+        text = re.sub(rf"\b{word}\b", replacement, text, flags=re.IGNORECASE)
+    return text
+
 
 #state
 ptt_should_record = False
@@ -59,17 +74,51 @@ def main():
             speech_recognition()
 
 
+# Original code for working Push-To-Talk (uncomment if you want to use it)
+# def ptt_press(key: Key):
+    # global ptt_should_record, released
+    # if key == Key.ctrl_r and released:
+        # ptt_should_record = True
+        # released = False
+        # t = threading.Thread(target=ptt_record_audio)
+        # t.start()
+
+
+# def ptt_release(key: Key):
+    # global ptt_should_record, released
+    # if key == Key.ctrl_r:
+        # ptt_should_record = False
+        # released = True
+
+# --- add this new state so toggle mode works ---
+toggle_recording = False
+
 def ptt_press(key: Key):
-    global ptt_should_record, released
+    global ptt_should_record, released, toggle_recording
+
+    # Existing Push-To-Talk (Right Ctrl)
     if key == Key.ctrl_r and released:
         ptt_should_record = True
         released = False
         t = threading.Thread(target=ptt_record_audio)
         t.start()
 
+    # New Toggle mode (Right Shift)
+    if key == Key.shift_r:
+        if not toggle_recording:  # start recording
+            ptt_should_record = True
+            toggle_recording = True
+            t = threading.Thread(target=ptt_record_audio)
+            t.start()
+        else:  # stop recording
+            ptt_should_record = False
+            toggle_recording = False
+
 
 def ptt_release(key: Key):
-    global ptt_should_record, released
+    global ptt_should_record, released, toggle_recording
+
+    # Release for Push-To-Talk
     if key == Key.ctrl_r:
         ptt_should_record = False
         released = True
@@ -124,12 +173,22 @@ def ptt_record_audio():
     recognize_file()
 
 
+# def recognize_file():
+    # global ws, provider, api_key
+    # recognizer = sr.Recognizer()
+    # with sr.AudioFile("recorded.wav") as source:
+        # audio = recognizer.listen(source)
+        # recognize_audio(audio, recognizer, throw=False)
+
 def recognize_file():
     global ws, provider, api_key
     recognizer = sr.Recognizer()
     with sr.AudioFile("recorded.wav") as source:
         audio = recognizer.listen(source)
-        recognize_audio(audio, recognizer, throw=False)
+        text = recognize_audio(audio, recognizer, throw=False)
+        if text.strip() != "":
+            ws.send(text)
+
 
 last_received = 0
 reset_next = False
@@ -168,7 +227,7 @@ def speech_recognition():
     while True:
         time.sleep(0.01)
         if (time.time() - last_received > 1.5) and (recognized_text != ""):
-            print("SENT TEXT TO AI", file=sys.stderr)
+            print("SENT TEXT TO AI", file=sys.stderr) # "SENT TEXT TO AI" can replaced with the name of your AI
             ws.send(recognized_text)
             recognized_text = ""
             reset_next = True
@@ -195,6 +254,36 @@ def speech_recognition():
             continue
 
 
+# Original code without replacing logic
+# def recognize_audio(audio: sr.AudioData, recognizer: sr.Recognizer, throw: bool):
+    # global provider, ws, api_key, stt_language
+    # text = ''
+    # start_time = time.time()
+    # try:
+        # match(provider):
+            # case "google":
+                # text = recognizer.recognize_google(audio, language=stt_language)
+            # case "openai":
+                # text = recognizer.recognize_whisper_api(audio, api_key=api_key)
+    # except sr.exceptions.SetupError as e:
+        # if throw:
+            # raise Exception()
+        # print("Incorrect OpenAI token.", file=sys.stderr)
+    # except sr.exceptions.UnknownValueError as e:
+        # if throw:
+            # raise Exception()
+        # print("Could not understand audio.", file=sys.stderr)
+    # except sr.exceptions.RequestError as e:
+        # if throw:
+            # raise Exception()
+        # print("Could not contact audio recognition API.", file=sys.stderr)
+    # #ws.send(text)
+    # return text
+    # print("Recognition took:", round((time.time() - start_time) * 1_000), "ms", file=sys.stdout)
+    # sys.stdout.flush()
+
+
+# Logic with replacing words logic
 def recognize_audio(audio: sr.AudioData, recognizer: sr.Recognizer, throw: bool):
     global provider, ws, api_key, stt_language
     text = ''
@@ -217,10 +306,12 @@ def recognize_audio(audio: sr.AudioData, recognizer: sr.Recognizer, throw: bool)
         if throw:
             raise Exception()
         print("Could not contact audio recognition API.", file=sys.stderr)
-    #ws.send(text)
+
+    # ✅ Apply replacements before returning
+    text = apply_replacements(text)
+
     return text
-    print("Recognition took:", round((time.time() - start_time) * 1_000), "ms", file=sys.stdout)
-    sys.stdout.flush()
+
 
 
 if __name__ == "__main__":
