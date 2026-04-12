@@ -13,19 +13,6 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
   - **SHOULD** be fixed in this version*
 - You get stuck on "Creating Electron window" after restarting
   - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
-- My AI lost all memories! How can I recover them?
-  - First, the `vectordb_test.py` creates five backups with every new entry. IF you need to recover them, then execute this command in the vectordbs venv:
-```
-python restore_memory.py --backup "database.txt.backup_<generated timestamp> --current "database.txt" --output "database.txt"
-```
-If you want to check before replacing the file, use this command instead:
-```
-python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database_recovered.txt"
-```
-And just for checking:
-```
-python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --dry-run
-```
 - I want to use NovelAI but they changed their API endpoint
   - First, move the original and the".dist-info"-folder to a different place, then activate the venv via opening the terminal in the root folder and put this command in:
 ```
@@ -45,8 +32,21 @@ After that is done, just copy the novelai_api-folder from the base(or download t
   - You have to download the [ffmpeg executable](https://www.ffmpeg.org/download.html) and put it into "bin/ffmpeg" before starting
 - My AI is now back before I created them
   - If you have the original w-AI-fu, then just copy-paste the userdata folder from the original into this verison (Better to not overwrite things, though)
-- My AI has forgotten everything
+- My AI has forgotten everything after reinstalling
   - Copy the database.txt from source/app/vectordb in the original version of w-AI-fu and put it into the same folder again in this version
+- My AI lost all memories out of nowhere! How can I recover them?
+  - First, the `vectordb_test.py` creates five backups with every new entry. IF you need to recover them, then execute this command in the vectordbs venv:
+```
+python restore_memory.py --backup "database.txt.backup_<generated timestamp> --current "database.txt" --output "database.txt"
+```
+If you want to check before replacing the file, use this command instead:
+```
+python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database_recovered.txt"
+```
+And just for checking:
+```
+python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --dry-run
+```
 
 ## Installation
 1. Download the ZIP through the button on the top and extract it.
