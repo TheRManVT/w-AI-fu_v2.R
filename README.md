@@ -13,6 +13,19 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
   - **SHOULD** be fixed in this version*
 - You get stuck on "Creating Electron window" after restarting
   - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
+- My AI lost all memories! How can I recover them?
+  - First, the `vectordb_test.py` creates five backups with every new entry. IF you need to recover them, then execute this command in the vectordbs venv:
+```
+python restore_memory.py --backup "database.txt.backup_1775932631955" --current "database.txt" --output "database.txt"
+```
+If you want to check before replacing the file, use this command instead:
+```
+python restore_memory.py --backup "database.txt.backup_1775932631955" --current "database.txt" --output "database_recovered.txt"
+```
+And just for checking:
+```
+python restore_memory.py --backup "database.txt.backup_1775932631955" --current "database.txt" --output "database.txt" --dry-run
+```
 - I want to use NovelAI but they changed their API endpoint
   - First, move the original and the".dist-info"-folder to a different place, then activate the venv via opening the terminal in the root folder and put this command in:
 ```
