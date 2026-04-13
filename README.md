@@ -39,13 +39,19 @@ After that is done, just copy the novelai_api-folder from the base(or download t
 ```
 python restore_memory.py --backup "database.txt.backup_<generated timestamp> --current "database.txt" --output "database.txt"
 ```
+If you want to fully restore from the backup and want any new memory entries, that have been made after the backup last, to be included, use this command then:
+```
+python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --full-restore
+```
 If you want to check before replacing the file, use this command instead:
 ```
 python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database_recovered.txt"
+python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database_recovered.txt" --full-restore
 ```
 And just for checking:
 ```
 python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --dry-run
+python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --full-restore --dry-run
 ```
 
 ## Installation
