@@ -15,7 +15,6 @@ word_replacements = {
     "From speech": "To AI"
 }
 
-# Logic for replacing words
 def apply_replacements(text: str) -> str:
     for word, replacement in word_replacements.items():
         # \b ensures whole word match, re.IGNORECASE makes it case-insensitive
@@ -74,7 +73,6 @@ def main():
             speech_recognition()
 
 
-# Original code for working Push-To-Talk (uncomment if you want to use it)
 # def ptt_press(key: Key):
     # global ptt_should_record, released
     # if key == Key.ctrl_r and released:
@@ -90,27 +88,60 @@ def main():
         # ptt_should_record = False
         # released = True
 
-# --- add this new state so toggle mode works ---
+# --- add this new state ---
 toggle_recording = False
+recording_lock = threading.Lock()
+recording_thread = None
+
+def reset_ptt_state():
+    """Reset all PTT state flags to a clean idle state."""
+    global ptt_should_record, released, toggle_recording, recording_thread
+    ptt_should_record = False
+    released = True
+    toggle_recording = False
+    recording_thread = None
+    print("PTT state reset.", file=sys.stderr)
 
 def ptt_press(key: Key):
-    global ptt_should_record, released, toggle_recording
+    global ptt_should_record, released, toggle_recording, recording_thread
 
     # Existing Push-To-Talk (Right Ctrl)
     if key == Key.ctrl_r and released:
-        ptt_should_record = True
-        released = False
-        t = threading.Thread(target=ptt_record_audio)
-        t.start()
-
-    # New Toggle mode (Right Shift)
-    if key == Key.shift_r:
-        if not toggle_recording:  # start recording
+        if recording_lock.acquire(blocking=False):
             ptt_should_record = True
-            toggle_recording = True
-            t = threading.Thread(target=ptt_record_audio)
-            t.start()
-        else:  # stop recording
+            released = False
+            recording_thread = threading.Thread(target=ptt_record_audio)
+            recording_thread.start()
+        else:
+            # Lock already held (likely by toggle) — reset to recover
+            print("PTT conflict detected, resetting state.", file=sys.stderr)
+            ptt_should_record = False
+            toggle_recording = False
+            released = True
+            try:
+                recording_lock.release()
+            except RuntimeError:
+                pass
+
+    # Toggle mode (Right Shift)
+    elif key == Key.shift_r:
+        if not toggle_recording:
+            if recording_lock.acquire(blocking=False):
+                ptt_should_record = True
+                toggle_recording = True
+                recording_thread = threading.Thread(target=ptt_record_audio)
+                recording_thread.start()
+            else:
+                # Lock already held (likely by PTT) — reset to recover
+                print("Toggle conflict detected, resetting state.", file=sys.stderr)
+                ptt_should_record = False
+                toggle_recording = False
+                released = True
+                try:
+                    recording_lock.release()
+                except RuntimeError:
+                    pass
+        else:
             ptt_should_record = False
             toggle_recording = False
 
@@ -170,6 +201,12 @@ def ptt_record_audio():
     wf.setframerate(sample_rate)
     wf.writeframes(b"".join(frames))
     wf.close()
+
+    try:
+        recording_lock.release()
+    except RuntimeError:
+        pass  # Already released during a conflict reset
+
     recognize_file()
 
 
@@ -227,7 +264,7 @@ def speech_recognition():
     while True:
         time.sleep(0.01)
         if (time.time() - last_received > 1.5) and (recognized_text != ""):
-            print("SENT TEXT TO AI", file=sys.stderr) # "SENT TEXT TO AI" can replaced with the name of your AI
+            print("SENT TEXT TO AI", file=sys.stderr)
             ws.send(recognized_text)
             recognized_text = ""
             reset_next = True
@@ -254,7 +291,6 @@ def speech_recognition():
             continue
 
 
-# Original code without replacing logic
 # def recognize_audio(audio: sr.AudioData, recognizer: sr.Recognizer, throw: bool):
     # global provider, ws, api_key, stt_language
     # text = ''
@@ -282,8 +318,6 @@ def speech_recognition():
     # print("Recognition took:", round((time.time() - start_time) * 1_000), "ms", file=sys.stdout)
     # sys.stdout.flush()
 
-
-# Logic with replacing words logic
 def recognize_audio(audio: sr.AudioData, recognizer: sr.Recognizer, throw: bool):
     global provider, ws, api_key, stt_language
     text = ''
