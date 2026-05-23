@@ -25,11 +25,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBadWords = void 0;
 const fs = __importStar(require("fs"));
+
 function getBadWords() {
-    const PATH = process.cwd() + '/userdata/moderation/bad_words_b64';
-    let fcontent = fs.readFileSync(PATH).toString();
-    const buff = Buffer.from(fcontent, 'base64');
-    const tostr = buff.toString('utf-8');
-    return tostr.split(/\r\n|\n/g).map((v) => { return v.toLowerCase(); });
+    const PATH = process.cwd() + '/userdata/moderation/bad_words.txt';
+
+    // Base64 version (uncomment to restore):
+    // const PATH = process.cwd() + '/userdata/moderation/bad_words_b64';
+    // let fcontent = fs.readFileSync(PATH).toString();
+    // const buff = Buffer.from(fcontent, 'base64');
+    // const tostr = buff.toString('utf-8');
+    // return tostr.split(/\r\n|\n/g).map((v) => { return v.toLowerCase(); });
+
+    return fs.readFileSync(PATH, 'utf-8').split(/\r\n|\n/g).map((v) => v.toLowerCase());
 }
 exports.getBadWords = getBadWords;
