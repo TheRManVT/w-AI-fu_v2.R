@@ -1,0 +1,7 @@
+Add this to the generated "auth.json":
+
+"novelai": {
+    "token": "pst-XXXXXXXXXXXXXXXXXXXXXXXX"
+}
+
+Replace the token with the one you get from NovelAI under "User Settings → Account → Get Persistent API Token"

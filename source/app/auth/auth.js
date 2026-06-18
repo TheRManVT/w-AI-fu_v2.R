@@ -4,8 +4,7 @@ exports.Auth = void 0;
 const import_auth_1 = require("./import_auth");
 class Auth {
     "novelai" = {
-        mail: "",
-        password: "",
+        token: "",
     };
     "openai" = {
         token: "",

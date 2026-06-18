@@ -5,39 +5,32 @@ from typing import Optional
 from aiohttp import ClientSession
 
 from novelai_api import NovelAIAPI
-from novelai_api.utils import get_encryption_key
 
 
 class API:
-    _username: str
-    _password: str
+    _token: str
     _session: ClientSession
 
     logger: Logger
     api: Optional[NovelAIAPI]
 
     def __init__(self):
-        if "NAI_USERNAME" not in env or "NAI_PASSWORD" not in env:
-            raise RuntimeError("Please ensure that NAI_USERNAME and NAI_PASSWORD are set in your environment")
+        if "NAI_TOKEN" not in env:
+            raise RuntimeError("Please ensure that NAI_TOKEN is set in your environment")
 
-        self._username = env["NAI_USERNAME"]
-        self._password = env["NAI_PASSWORD"]
+        self._token = env["NAI_TOKEN"]
 
         self.logger = Logger("NovelAI")
         self.logger.addHandler(StreamHandler())
 
         self.api = NovelAIAPI(logger=self.logger)
 
-    @property
-    def encryption_key(self):
-        return get_encryption_key(self._username, self._password)
-
     async def __aenter__(self):
         self._session = ClientSession()
         await self._session.__aenter__()
 
         self.api.attach_session(self._session)
-        await self.api.high_level.login(self._username, self._password)
+        await self.api.high_level.login_with_token(self._token)
 
         return self
 

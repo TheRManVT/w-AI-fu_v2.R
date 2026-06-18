@@ -20,8 +20,7 @@ export class LargeLanguageModelNovelAI implements ILargeLanguageModel {
         this.#child_process = cproc.spawn(ENV.PYTHON_PATH, ["novel_llm.py"], {
             cwd: process.cwd() + "/source/app/novelai_api/",
             env: {
-                NAI_USERNAME: wAIfu.state!.auth["novelai"]["mail"],
-                NAI_PASSWORD: wAIfu.state!.auth["novelai"]["password"],
+                NAI_TOKEN: Waifu_1.wAIfu.state.auth["novelai"]["token"],
             },
             detached: false,
             shell: false,
