@@ -53,6 +53,8 @@ And just for checking:
 python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --dry-run
 python restore_memory.py --backup "database.txt.backup_<generated timestamp>" --current "database.txt" --output "database.txt" --full-restore --dry-run
 ```
+- I get the error "400: Please refresh NovelAI.net"
+  - If you downloaded the recent ZIP, you should not get the error. NovelAI has made the change starting June 18th 2026, that the API only accepts the login via API-Token. The initial version of this only had the login with mail and password. Thanks to the dev of [Jo-C](https://www.twitch.tv/jocteev), it's now possible to use the token
 
 ## Installation
 1. Download the ZIP through the button on the top and extract it.
