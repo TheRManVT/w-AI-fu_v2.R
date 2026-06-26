@@ -1,6 +1,7 @@
 bin/ffmpeg/ffmpeg.exe
 source/app/vectordb/database.txt
 source/app/vectordb/venv
+userdata/characters/archive
 venv
 node_modules
 logs/*
