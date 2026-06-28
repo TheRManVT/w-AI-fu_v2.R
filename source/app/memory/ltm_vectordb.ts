@@ -7,6 +7,8 @@ import { ILongTermMemory, QueryResult } from "./ltm_interface";
 import { ENV } from "../types/Waifu";
 import { IO } from "../io/io";
 
+const QUERY_TIMEOUT_MS = 10_000;
+
 export class LongTermMemoryVectorDB implements ILongTermMemory {
     #child_process: cproc.ChildProcess;
     #websocket: WebSocket = new WebSocket(null);
@@ -41,7 +43,7 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 if (s !== "") IO.quietPrint(s);
             });
 
-            IO.warn("- Installing dependencies... (~4min)");
+            IO.warn("- Installing dependencies... (~10min)");
             const dep_install_result = cproc.spawnSync(VENV_PIP, [
                 "install",
                 "-r",
@@ -82,7 +84,14 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
 
     free(): Promise<void> {
         return new Promise((resolve) => {
+            // Final dump+backup before killing — give Python up to 5s to finish writing
+            this.dump();
+            const kill_timeout = setTimeout(() => {
+                this.#child_process.kill(2);
+            }, 5_000);
+
             this.#child_process.on("close", () => {
+                clearTimeout(kill_timeout);
                 this.#child_process.removeAllListeners();
                 this.#websocket_server.removeAllListeners();
                 this.#websocket.removeAllListeners();
@@ -98,13 +107,14 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 };
                 setTimeout(el, 100);
             });
+
             this.#child_process.kill(2);
         });
     }
 
     store(text: string): void {
-        let timestamp = new Date().getTime();
-        const sanitized = text.replaceAll(/[^a-zA-Z0-9\s\.\,\;\:]/g, "");
+        const timestamp = new Date().getTime();
+        const sanitized = text.replaceAll(/[^a-zA-Z0-9\s\.\,\;\:\'\-\!\?]/g, "");
         const formated_text = `[${new Date().toLocaleDateString("en", {
             month: "numeric",
             year: "numeric",
@@ -138,6 +148,15 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                     })
             );
 
+            // Timeout: if vectordb_test.py crashes or hangs, don't block forever
+            const timeout = setTimeout(() => {
+                if (is_resolved) return;
+                is_resolved = true;
+                IO.warn(`[ltm] Query timed out after ${QUERY_TIMEOUT_MS}ms — returning empty results.`);
+                this.#websocket.removeEventListener("message", e);
+                resolve([]);
+            }, QUERY_TIMEOUT_MS);
+
             const e = (ev: WebSocket.MessageEvent) => {
                 if (is_resolved === true) return;
                 let resp = ev.data.toString("utf8");
@@ -145,8 +164,10 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 let id = split_data[0];
                 if (id !== expected_id) return;
 
-                let payload = split_data.slice(1, undefined).join(" ");
+                clearTimeout(timeout);
+                is_resolved = true;
 
+                let payload     = split_data.slice(1).join(" ");
                 let payload_obj = JSON.parse(payload);
 
                 is_resolved = true;

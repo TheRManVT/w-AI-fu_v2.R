@@ -10,6 +10,7 @@ class Memory {
     #short_term_mem = [];
     #long_term_mem = [];
     #awaiting_summary = [];
+    #is_summarizing = false;
     getCharacterDef() {
         const character = (0, characters_1.getCurrentCharacter)();
         return `${character.char_persona}${character.char_persona.endsWith("\n") ? "" : "\n"}`;
@@ -46,8 +47,12 @@ class Memory {
     getMemories(context = null, prompt = null, additional_long_term = []) {
         const cfg = Waifu_1.wAIfu.state.config;
         const max_buffered = cfg.memory.summarize_after_x_old_entries.value;
-        if (this.#awaiting_summary.length >= max_buffered)
-            this.summarizeBuffered();
+        if (this.#awaiting_summary.length >= max_buffered && !this.#is_summarizing) {
+            this.summarizeBuffered().catch((e) => {
+                io_1.IO.warn(`[memory] summarizeBuffered failed: ${e}`);
+                this.#is_summarizing = false;
+            });
+        }
         const example_dialogue = this.getExampleDialogue();
         const buffered_mem = this.getBufferedMemories();
         const short_mem = this.getShortTerm();
@@ -126,8 +131,12 @@ class Memory {
         this.#short_term_mem = [];
         this.#long_term_mem = [];
         this.#awaiting_summary = [];
+        this.#is_summarizing = false;
     }
     async summarizeBuffered() {
+        if (this.#is_summarizing)
+            return;
+        this.#is_summarizing = true;
         const buffered_str = this.getBufferedMemories().join("");
         const gen_result = await Waifu_1.wAIfu.dependencies.llm.generate(buffered_str +
             `[ Give me a 30 words summary of the contents of this interraction, from the POV of ${(0, characters_1.getCurrentCharacter)().char_name}. Use names. ]`, {
@@ -139,7 +148,10 @@ class Memory {
             use_base_model: true,
         });
         if (gen_result.success === false) {
-            io_1.IO.warn("Failed to summarize memory part of memory.");
+            io_1.IO.warn("Failed to summarize memory.");
+            // Clear anyway so we don't retry the same entries forever
+            this.#awaiting_summary = [];
+            this.#is_summarizing = false;
             return;
         }
         gen_result.value = gen_result.value.replaceAll("\n", "");
@@ -148,9 +160,13 @@ class Memory {
         if (Waifu_1.wAIfu.state?.config.memory.store_summarized_memories_to_vectordb
             .value === true) {
             Waifu_1.wAIfu.dependencies?.ltm.store(gen_result.value.trim());
+            // Persist to disk and trigger a rolling backup immediately after
+            // storing the new summary into the vector database.
+            Waifu_1.wAIfu.dependencies?.ltm.dump();
         }
         this.addLongTermMemory(gen_result.value);
         this.#awaiting_summary = [];
+        this.#is_summarizing = false;
     }
     #memToString(memories) {
         const formated_mems = memories.map((s) => s.endsWith("\n") ? s : s + "\n");

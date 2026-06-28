@@ -15,13 +15,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LongTermMemoryVectorDB = void 0;
 const cproc = __importStar(require("child_process"));
@@ -30,6 +40,7 @@ const crypto = __importStar(require("crypto"));
 const fs = __importStar(require("fs"));
 const Waifu_1 = require("../types/Waifu");
 const io_1 = require("../io/io");
+const QUERY_TIMEOUT_MS = 10_000;
 class LongTermMemoryVectorDB {
     #child_process;
     #websocket = new ws_1.default(null);
@@ -43,6 +54,7 @@ class LongTermMemoryVectorDB {
         const VENV_PATH = process.cwd() + "/source/app/vectordb/venv";
         const VENV_PYTHON = VENV_PATH + "/Scripts/python.exe";
         const VENV_PIP = VENV_PATH + "/Scripts/pip.exe";
+        // First time setup, gotta make a python venv because of dep conflict
         if (fs.existsSync(VENV_PATH) === false) {
             io_1.IO.warn("First time setup of vector database, this might take some time (~3GB)...");
             fs.mkdirSync(VENV_PATH);
@@ -59,7 +71,7 @@ class LongTermMemoryVectorDB {
                 if (s !== "")
                     io_1.IO.quietPrint(s);
             });
-            io_1.IO.warn("- Installing dependencies... (~4min)");
+            io_1.IO.warn("- Installing dependencies... (~10min)");
             const dep_install_result = cproc.spawnSync(VENV_PIP, [
                 "install",
                 "-r",
@@ -98,7 +110,13 @@ class LongTermMemoryVectorDB {
     }
     free() {
         return new Promise((resolve) => {
+            // Final dump+backup before killing — give Python up to 5s to finish writing
+            this.dump();
+            const kill_timeout = setTimeout(() => {
+                this.#child_process.kill(2);
+            }, 5_000);
             this.#child_process.on("close", () => {
+                clearTimeout(kill_timeout);
                 this.#child_process.removeAllListeners();
                 this.#websocket_server.removeAllListeners();
                 this.#websocket.removeAllListeners();
@@ -117,8 +135,8 @@ class LongTermMemoryVectorDB {
         });
     }
     store(text) {
-        let timestamp = new Date().getTime();
-        const sanitized = text.replaceAll(/[^a-zA-Z0-9\s\.\,\;\:]/g, "");
+        const timestamp = new Date().getTime();
+        const sanitized = text.replaceAll(/[^a-zA-Z0-9\s\.\,\;\:\'\-\!\?]/g, "");
         const formated_text = `[${new Date().toLocaleDateString("en", {
             month: "numeric",
             year: "numeric",
@@ -144,6 +162,15 @@ class LongTermMemoryVectorDB {
                     text: formated_text,
                     items: items,
                 }));
+            // Timeout: if vectordb_test.py crashes or hangs, don't block forever
+            const timeout = setTimeout(() => {
+                if (is_resolved)
+                    return;
+                is_resolved = true;
+                io_1.IO.warn(`[ltm] Query timed out after ${QUERY_TIMEOUT_MS}ms — returning empty results.`);
+                this.#websocket.removeEventListener("message", e);
+                resolve([]);
+            }, QUERY_TIMEOUT_MS);
             const e = (ev) => {
                 if (is_resolved === true)
                     return;
@@ -152,7 +179,9 @@ class LongTermMemoryVectorDB {
                 let id = split_data[0];
                 if (id !== expected_id)
                     return;
-                let payload = split_data.slice(1, undefined).join(" ");
+                clearTimeout(timeout);
+                is_resolved = true;
+                let payload = split_data.slice(1).join(" ");
                 let payload_obj = JSON.parse(payload);
                 is_resolved = true;
                 let results = [];

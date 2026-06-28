@@ -11,9 +11,10 @@ type StampedMemory = {
 };
 
 export class Memory {
-    #short_term_mem: string[] = [];
+    #short_term_mem: string[]      = [];
     #long_term_mem: StampedMemory[] = [];
-    #awaiting_summary: string[] = [];
+    #awaiting_summary: string[]    = [];
+    #is_summarizing: boolean       = false;
 
     getCharacterDef(): string {
         const character: Character = getCurrentCharacter();
@@ -66,8 +67,12 @@ export class Memory {
 
         const max_buffered = cfg.memory.summarize_after_x_old_entries.value;
 
-        if (this.#awaiting_summary.length >= max_buffered)
-            this.summarizeBuffered();
+        if (this.#awaiting_summary.length >= max_buffered && !this.#is_summarizing) {
+            this.summarizeBuffered().catch((e) => {
+                IO.warn(`[memory] summarizeBuffered failed: ${e}`);
+                this.#is_summarizing = false;
+            });
+        }
 
         const example_dialogue = this.getExampleDialogue();
         const buffered_mem = this.getBufferedMemories();
@@ -179,12 +184,16 @@ export class Memory {
     }
 
     clear(): void {
-        this.#short_term_mem = [];
-        this.#long_term_mem = [];
+        this.#short_term_mem   = [];
+        this.#long_term_mem    = [];
         this.#awaiting_summary = [];
+        this.#is_summarizing   = false;
     }
 
     async summarizeBuffered(): Promise<void> {
+        if (this.#is_summarizing) return;
+        this.#is_summarizing = true;
+
         const buffered_str = this.getBufferedMemories().join("");
 
         const gen_result = await wAIfu.dependencies!.llm.generate(
@@ -203,7 +212,10 @@ export class Memory {
         );
 
         if (gen_result.success === false) {
-            IO.warn("Failed to summarize memory part of memory.");
+            IO.warn("Failed to summarize memory.");
+            // Clear anyway so we don't retry the same entries forever
+            this.#awaiting_summary = [];
+            this.#is_summarizing   = false;
             return;
         }
 
@@ -217,10 +229,15 @@ export class Memory {
                 .value === true
         ) {
             wAIfu.dependencies?.ltm.store(gen_result.value.trim());
+
+            // Persist to disk and trigger a rolling backup immediately after
+            // storing the new summary into the vector database.
+            wAIfu.dependencies?.ltm.dump();
         }
 
         this.addLongTermMemory(gen_result.value);
         this.#awaiting_summary = [];
+        this.#is_summarizing   = false;
     }
 
     #memToString(memories: string[]): string {
