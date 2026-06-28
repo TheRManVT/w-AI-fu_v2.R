@@ -122,10 +122,20 @@ def handle_msg(data: str, ws, memory: Memory, path: str):
             if BACKUP_INTERVAL == 0 or _dump_counter % BACKUP_INTERVAL == 0:
                 make_backup(path)
  
+        case "BACKUP":
+            # Save to disk and create a backup without any console output
+            wait_ms = 0
+            while _pending_store and wait_ms < 2000:
+                time.sleep(0.01)
+                wait_ms += 10
+ 
+            memory.dump()
+            make_backup(path)
+ 
         case _:
             return
-
-
+ 
+ 
 def main():
     path = os.getcwd() + "\\database.txt"
     options = {'mode': 'sliding_window', 'window_size': 80, 'overlap': 16}

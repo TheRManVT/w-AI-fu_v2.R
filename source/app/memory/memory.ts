@@ -230,9 +230,9 @@ export class Memory {
         ) {
             wAIfu.dependencies?.ltm.store(gen_result.value.trim());
 
-            // Persist to disk and trigger a rolling backup immediately after
-            // storing the new summary into the vector database.
-            wAIfu.dependencies?.ltm.dump();
+            // Save to disk and create a rolling backup silently —
+            // using backup() instead of dump() so nothing appears in the console.
+            wAIfu.dependencies?.ltm.backup();
         }
 
         this.addLongTermMemory(gen_result.value);

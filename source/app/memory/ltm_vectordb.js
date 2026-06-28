@@ -110,8 +110,8 @@ class LongTermMemoryVectorDB {
     }
     free() {
         return new Promise((resolve) => {
-            // Final dump+backup before killing — give Python up to 5s to finish writing
-            this.dump();
+            // Final save+backup before killing — give Python up to 5s to finish writing
+            this.backup();
             const kill_timeout = setTimeout(() => {
                 this.#child_process.kill(2);
             }, 5_000);
@@ -204,5 +204,11 @@ class LongTermMemoryVectorDB {
     dump() {
         this.#websocket.send("DUMP");
     }
+    // Saves to disk and creates a rolling backup without any console output.
+    // Use this instead of dump() when you don't need the stdout log.
+    backup() {
+        this.#websocket.send("BACKUP");
+    }
 }
 exports.LongTermMemoryVectorDB = LongTermMemoryVectorDB;
+ 

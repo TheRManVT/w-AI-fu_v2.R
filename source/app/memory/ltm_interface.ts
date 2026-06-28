@@ -11,4 +11,5 @@ export interface ILongTermMemory {
     query(text: string, items: number): Promise<QueryResult[]>;
     clear(): void;
     dump(): void;
+    backup(): void;
 }

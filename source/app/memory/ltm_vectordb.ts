@@ -19,7 +19,7 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
             host: "127.0.0.1",
             port: 9251,
         });
-
+ 
         const VDB_CWD = process.cwd() + "/source/app/vectordb";
         const VENV_PATH = process.cwd() + "/source/app/vectordb/venv";
         const VENV_PYTHON = VENV_PATH + "/Scripts/python.exe";
@@ -36,27 +36,27 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 "venv",
                 VENV_PATH,
             ]);
-
+ 
             venv_creation_result.output.forEach((v) => {
                 if (!v) return;
                 let s = v.toString("utf8");
                 if (s !== "") IO.quietPrint(s);
             });
-
+ 
             IO.warn("- Installing dependencies... (~10min)");
             const dep_install_result = cproc.spawnSync(VENV_PIP, [
                 "install",
                 "-r",
                 VDB_CWD + "/requirements.txt",
             ]);
-
+ 
             dep_install_result.output.forEach((v) => {
                 if (!v) return;
                 let s = v.toString("utf8");
                 if (s !== "") IO.quietPrint(s);
             });
         }
-
+ 
         this.#child_process = cproc.spawn(VENV_PYTHON, ["vectordb_test.py"], {
             cwd: process.cwd() + "/source/app/vectordb/",
             detached: false,
@@ -69,7 +69,7 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
             IO.print(data.toString());
         });
     }
-
+ 
     initialize(): Promise<void> {
         return new Promise((resolve) => {
             this.#websocket_server.on("connection", (socket) => {
@@ -81,15 +81,15 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
             });
         });
     }
-
+ 
     free(): Promise<void> {
         return new Promise((resolve) => {
-            // Final dump+backup before killing — give Python up to 5s to finish writing
-            this.dump();
+            // Final save+backup before killing — give Python up to 5s to finish writing
+            this.backup();
             const kill_timeout = setTimeout(() => {
                 this.#child_process.kill(2);
             }, 5_000);
-
+ 
             this.#child_process.on("close", () => {
                 clearTimeout(kill_timeout);
                 this.#child_process.removeAllListeners();
@@ -97,7 +97,7 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 this.#websocket.removeAllListeners();
                 this.#websocket.close();
                 this.#websocket_server.close();
-
+ 
                 let el = () => {
                     if (this.#websocket.readyState === WebSocket.CLOSED) {
                         resolve();
@@ -107,11 +107,11 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 };
                 setTimeout(el, 100);
             });
-
+ 
             this.#child_process.kill(2);
         });
     }
-
+ 
     store(text: string): void {
         const timestamp = new Date().getTime();
         const sanitized = text.replaceAll(/[^a-zA-Z0-9\s\.\,\;\:\'\-\!\?]/g, "");
@@ -121,24 +121,24 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
         })}]${sanitized}`;
         this.#websocket.send(`STORE ${timestamp} ${formated_text}`);
     }
-
+ 
     query(text: string, items: number): Promise<QueryResult[]> {
         return new Promise((resolve) => {
             let is_resolved = false;
-
+ 
             if (text.trim() === "") {
                 is_resolved = true;
                 resolve([]);
                 return;
             }
-
+ 
             const expected_id = crypto.randomUUID();
-
+ 
             const formated_text = `[${new Date().toLocaleDateString("en", {
                 month: "numeric",
                 year: "numeric",
             })}]${text}`;
-
+ 
             this.#websocket.send(
                 "QUERY " +
                     JSON.stringify({
@@ -147,7 +147,7 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                         items: items,
                     })
             );
-
+ 
             // Timeout: if vectordb_test.py crashes or hangs, don't block forever
             const timeout = setTimeout(() => {
                 if (is_resolved) return;
@@ -156,22 +156,22 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                 this.#websocket.removeEventListener("message", e);
                 resolve([]);
             }, QUERY_TIMEOUT_MS);
-
+ 
             const e = (ev: WebSocket.MessageEvent) => {
                 if (is_resolved === true) return;
                 let resp = ev.data.toString("utf8");
                 let split_data = resp.split(" ");
                 let id = split_data[0];
                 if (id !== expected_id) return;
-
+ 
                 clearTimeout(timeout);
                 is_resolved = true;
-
+ 
                 let payload     = split_data.slice(1).join(" ");
                 let payload_obj = JSON.parse(payload);
-
+ 
                 is_resolved = true;
-
+ 
                 let results: QueryResult[] = [];
                 for (let obj of payload_obj["results"]) {
                     let sanitized_text = obj["chunk"].replaceAll(
@@ -183,20 +183,26 @@ export class LongTermMemoryVectorDB implements ILongTermMemory {
                         timestamp: obj["metadata"],
                     });
                 }
-
+ 
                 resolve(results);
                 this.#websocket.removeEventListener("message", e);
             };
-
+ 
             this.#websocket.addEventListener("message", e);
         });
     }
-
+ 
     clear(): void {
         this.#websocket.send("CLEAR");
     }
-
+ 
     dump(): void {
         this.#websocket.send("DUMP");
+    }
+ 
+    // Saves to disk and creates a rolling backup without any console output.
+    // Use this instead of dump() when you don't need the stdout log.
+    backup(): void {
+        this.#websocket.send("BACKUP");
     }
 }

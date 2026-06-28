@@ -160,9 +160,9 @@ class Memory {
         if (Waifu_1.wAIfu.state?.config.memory.store_summarized_memories_to_vectordb
             .value === true) {
             Waifu_1.wAIfu.dependencies?.ltm.store(gen_result.value.trim());
-            // Persist to disk and trigger a rolling backup immediately after
-            // storing the new summary into the vector database.
-            Waifu_1.wAIfu.dependencies?.ltm.dump();
+            // Save to disk and create a rolling backup silently —
+            // using backup() instead of dump() so nothing appears in the console.
+            Waifu_1.wAIfu.dependencies?.ltm.backup();
         }
         this.addLongTermMemory(gen_result.value);
         this.#awaiting_summary = [];
