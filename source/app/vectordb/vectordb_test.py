@@ -7,6 +7,7 @@ import os
 import shutil
 import time
 import glob
+import io
  
  
 # ── Backup settings ───────────────────────────────────────────
@@ -18,7 +19,7 @@ _dump_counter  = 0
 _pending_store = False   # True while a STORE is being processed
  
  
-def make_backup(path: str):
+def make_backup(path: str, silent: bool = False):
     """Save a timestamped copy of the database and trim old ones."""
     if not os.path.exists(path):
         return
@@ -26,7 +27,8 @@ def make_backup(path: str):
     backup_name = os.path.basename(path) + f".backup_{int(time.time())}"
     backup_path = os.path.join(backup_dir, backup_name)
     shutil.copy2(path, backup_path)
-    print(f"[backup] Saved → {backup_name}", file=sys.stderr)
+    if not silent:
+        print(f"[backup] Saved → {backup_name}", file=sys.stderr)
  
     # Remove oldest backups beyond MAX_BACKUPS
     # Use backup_dir + glob pattern separately to avoid Windows path issues
@@ -35,7 +37,8 @@ def make_backup(path: str):
     for old in backups[:-MAX_BACKUPS]:
         try:
             os.remove(old)
-            print(f"[backup] Removed old backup: {os.path.basename(old)}", file=sys.stderr)
+            if not silent:
+                print(f"[backup] Removed old backup: {os.path.basename(old)}", file=sys.stderr)
         except Exception:
             pass
  
@@ -129,8 +132,15 @@ def handle_msg(data: str, ws, memory: Memory, path: str):
                 time.sleep(0.01)
                 wait_ms += 10
  
-            memory.dump()
-            make_backup(path)
+            # Redirect stdout temporarily in case memory.dump() itself prints anything
+            _real_stdout = sys.stdout
+            sys.stdout = io.StringIO()
+            try:
+                memory.dump()
+            finally:
+                sys.stdout = _real_stdout
+ 
+            make_backup(path, silent=True)
  
         case _:
             return
