@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InputSystemVoice = void 0;
+exports.InputSystemVoice = exports.STT_PORT = void 0;
 const readline = __importStar(require("readline"));
 const cproc = __importStar(require("child_process"));
 const input_interface_1 = require("./input_interface");
@@ -33,6 +33,7 @@ const Message_1 = require("../types/Message");
 const devices_1 = require("../devices/devices");
 const io_1 = require("../io/io");
 const ws_1 = __importStar(require("ws"));
+exports.STT_PORT = 8711;
 class InputSystemVoice {
     #cli_input_interface;
     #interrupt_next;
@@ -47,6 +48,10 @@ class InputSystemVoice {
             ? "1"
             : "0";
         let device = (0, devices_1.getDeviceIndex)(Waifu_1.wAIfu.state.config.devices.voice_input_device.value).toString();
+        this.#websocket_server = new ws_1.WebSocketServer({
+            host: "127.0.0.1",
+            port: exports.STT_PORT,
+        });
         this.#child_process = cproc.spawn(Waifu_1.ENV.PYTHON_PATH, [
             "speech.py",
             use_ptt,
@@ -54,6 +59,9 @@ class InputSystemVoice {
             Waifu_1.wAIfu.state.config.speech_to_text.stt_provider.value,
             Waifu_1.wAIfu.state.auth.openai.token,
             Waifu_1.wAIfu.state.config.speech_to_text.stt_language.value,
+            Waifu_1.wAIfu.state.config.speech_to_text.push_to_talk_key.value,
+            Waifu_1.wAIfu.state.config.speech_to_text.toggle_to_talk_key.value,
+            exports.STT_PORT.toString(),
         ], {
             cwd: `${process.cwd()}/source/app/speech_to_text/`,
             detached: false,
@@ -64,10 +72,6 @@ class InputSystemVoice {
         });
         this.#child_process.stdout?.on("data", (data) => {
             io_1.IO.print(data.toString());
-        });
-        this.#websocket_server = new ws_1.WebSocketServer({
-            host: "127.0.0.1",
-            port: 8711,
         });
     }
     async initialize() {
@@ -147,7 +151,7 @@ class InputSystemVoice {
                     resolve(new Result_1.Result(true, message, input_interface_1.REJECT_REASON.NONE));
                     return;
                 }
-                setTimeout(check_queue, 100);
+                setTimeout(check_queue, 10);
             };
             check_queue();
         });

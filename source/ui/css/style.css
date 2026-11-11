@@ -868,3 +868,14 @@ inline {
     border: solid 2px var(--border-color);
     font-size: 0.5rem;
 }
+
+.keybind-input {
+    min-width: 12rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.keybind-input.listening {
+    color: #ffcc00;
+    outline: 2px solid #ffcc00;
+}

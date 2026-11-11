@@ -469,6 +469,112 @@
         </div>
     </template>
 
+    <script>
+        /** Maps a KeyboardEvent.code to a key name understood by pynput (speech.py). */
+        function keybind_code_to_name(code) {
+            const special = {
+                ControlRight: 'ctrl_r', ControlLeft: 'ctrl_l',
+                ShiftRight: 'shift_r', ShiftLeft: 'shift_l',
+                AltRight: 'alt_gr', AltLeft: 'alt_l',
+                Space: 'space', Enter: 'enter', Tab: 'tab',
+                CapsLock: 'caps_lock', Insert: 'insert', Delete: 'delete',
+                Home: 'home', End: 'end', PageUp: 'page_up', PageDown: 'page_down',
+                ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+                Pause: 'pause', ScrollLock: 'scroll_lock', NumLock: 'num_lock',
+                PrintScreen: 'print_screen',
+            };
+            if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) return code.toLowerCase(); // F9 -> f9
+            if (/^Key[A-Z]$/.test(code)) return code.slice(3).toLowerCase();       // KeyV -> v
+            if (/^Digit[0-9]$/.test(code)) return code.slice(5);                   // Digit1 -> 1
+            return special[code] ?? null;
+        }
+
+        /** @param {HTMLButtonElement} button @param {string} name */
+        function keybind_set_display(button, name) {
+            button.dataset.key = name;
+            button.textContent = keybind_label(name);
+        }
+
+        /** Readable text for a stored key name, e.g. "ctrl_r" -> "Right Ctrl". */
+        function keybind_label(name) {
+            if (name === '') return 'Not set';
+            const labels = {
+                ctrl_r: 'Right Ctrl', ctrl_l: 'Left Ctrl',
+                shift_r: 'Right Shift', shift_l: 'Left Shift',
+                alt_gr: 'Right Alt', alt_l: 'Left Alt',
+                space: 'Space', enter: 'Enter', tab: 'Tab', caps_lock: 'Caps Lock',
+                insert: 'Insert', delete: 'Delete', home: 'Home', end: 'End',
+                page_up: 'Page Up', page_down: 'Page Down',
+                up: 'Up Arrow', down: 'Down Arrow', left: 'Left Arrow', right: 'Right Arrow',
+                pause: 'Pause', scroll_lock: 'Scroll Lock', num_lock: 'Num Lock',
+                print_screen: 'Print Screen',
+            };
+            if (labels[name] !== undefined) return labels[name];
+            if (/^f[0-9]+$/.test(name)) return name.toUpperCase();   // f9 -> F9
+            if (name.length === 1) return name.toUpperCase();         // v -> V
+            return name;
+        }
+
+        /** Returns the label of another keybind on the same page using this key, or null. */
+        /** @param {HTMLButtonElement} button @param {string} name */
+        function keybind_conflict_with(button, name) {
+            if (name === '') return null;
+            const section = button.closest('.param-section');
+            if (section === null) return null;
+            for (const other of Array.from(section.querySelectorAll('.keybind-input'))) {
+                if (other === button) continue;
+                if (other.dataset.key === name) {
+                    return other.closest('span')?.firstElementChild?.textContent ?? 'another key';
+                }
+            }
+            return null;
+        }
+
+        /** @param {HTMLButtonElement} button */
+        function keybind_begin_capture(button) {
+            const previous = button.dataset.key ?? '';
+            button.classList.add('listening');
+            button.textContent = 'Press a key… (Esc cancels, Backspace clears)';
+
+            const finish = (name) => {
+                window.removeEventListener('keydown', onKey, true);
+                button.classList.remove('listening');
+                keybind_set_display(button, name);
+            };
+
+            const onKey = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.code === 'Escape') return finish(previous);
+                if (e.code === 'Backspace') return finish('');
+
+                const name = keybind_code_to_name(e.code);
+                if (name === null) {
+                    window.alert("That key can't be used. Try a letter, number, F-key, or Ctrl/Shift/Alt.");
+                    return; // keep listening
+                }
+                const clash = keybind_conflict_with(button, name);
+                if (clash !== null) {
+                    window.alert(`"${keybind_label(name)}" is already used by ${clash}.`);
+                    return finish(previous);
+                }
+                finish(name);
+            };
+
+            window.addEventListener('keydown', onKey, true);
+        }
+
+        /** @param {HTMLButtonElement} element */
+        function tmpl_keybind_input_set(element) {
+            const initial = element.parentElement?.getAttribute('value') ?? '';
+            keybind_set_display(element, initial);
+            element.onclick = () => keybind_begin_capture(element);
+        }
+    </script>
+    <template id="tmpl-keybind-input">
+        <button class="select-input keybind-input" type="button" title="Esc cancels, Backspace clears" onload="tmpl_keybind_input_set(this)">Not set</button>
+    </template>
+
     <script src="js/ui.js"></script>
 </body>
 

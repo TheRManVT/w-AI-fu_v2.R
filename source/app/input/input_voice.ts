@@ -10,6 +10,12 @@ import { IO } from "../io/io";
 
 import WebSocket, { WebSocketServer } from "ws";
 
+/**
+ * Port of the WebSocket server that speech.py sends recognized text to.
+ * Change this one value for a different build; speech.py receives it as an argument.
+ */
+export const STT_PORT = 8711;
+
 export class InputSystemVoice implements IInputSystem {
     #cli_input_interface: readline.Interface;
     #interrupt_next: boolean;
@@ -44,6 +50,9 @@ export class InputSystemVoice implements IInputSystem {
                 wAIfu.state!.config.speech_to_text.stt_provider.value,
                 wAIfu.state!.auth.openai.token,
                 wAIfu.state!.config.speech_to_text.stt_language.value,
+                wAIfu.state!.config.speech_to_text.push_to_talk_key.value,
+                wAIfu.state!.config.speech_to_text.toggle_to_talk_key.value,
+                STT_PORT.toString(),
             ],
             {
                 cwd: `${process.cwd()}/source/app/speech_to_text/`,
@@ -60,7 +69,7 @@ export class InputSystemVoice implements IInputSystem {
 
         this.#websocket_server = new WebSocketServer({
             host: "127.0.0.1",
-            port: 8711,
+            port: STT_PORT,
         });
     }
 
@@ -157,7 +166,7 @@ export class InputSystemVoice implements IInputSystem {
                     resolve(new Result(true, message, REJECT_REASON.NONE));
                     return;
                 }
-                setTimeout(check_queue, 100);
+                setTimeout(check_queue, 10);
             };
             check_queue();
         });

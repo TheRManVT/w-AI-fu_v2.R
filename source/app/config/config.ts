@@ -503,11 +503,25 @@ export class Config {
             value: false,
         }),
         push_to_talk: new ConfigFieldBoolean({
-            hint: "Press Right Ctrl to record audio from the microphone, release to end recording. Requires 'Voice Input' to be on.",
+            hint: "Enables the push-to-talk and toggle-to-talk keys below. Requires 'Voice Input' to be on.",
             reload: true,
             type: "boolean",
             default: false,
             value: false,
+        }),
+        push_to_talk_key: new ConfigFieldKeybind({
+            hint: "Hold this key to record from the microphone; release to stop and send. Leave empty to disable.",
+            reload: true,
+            type: "keybind",
+            default: "ctrl_r",
+            value: "ctrl_r",
+        }),
+        toggle_to_talk_key: new ConfigFieldKeybind({
+            hint: "Press once to start recording, press again to stop and send. Leave empty to disable.",
+            reload: true,
+            type: "keybind",
+            default: "shift_r",
+            value: "shift_r",
         }),
         stt_language: new ConfigFieldSelect({
             hint: "Language the STT model should use to infer the spoken text.",
@@ -911,4 +925,20 @@ export class ConfigFieldContextualMemoryList implements IConfigField {
 export class ContextualMemoryEntry {
     "keywords": string[] = [];
     "content": string = "";
+}
+
+export class ConfigFieldKeybind implements IConfigField {
+    constructor(args: ConfigFieldKeybind) {
+        this.hint = args.hint;
+        this.reload = args.reload;
+        this.type = args.type;
+        this.default = args.default;
+        this.value = args.value;
+    }
+
+    "hint": string = "";
+    "reload": boolean = false;
+    "type" = "keybind" as const;
+    "default": string = "";
+    "value": string = "";
 }

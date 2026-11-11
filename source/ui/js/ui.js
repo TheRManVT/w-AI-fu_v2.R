@@ -847,6 +847,17 @@ function setupParamsPage(config) {
                         new_param.appendChild(val);
                     }
                     break;
+                case "keybind":
+                    {
+                        let val = document.createElement("tmpl-keybind-input");
+                        val.setAttribute("value", value["value"].toString());
+                        val.setAttribute(
+                            "default",
+                            value["default"].toString()
+                        );
+                        new_param.appendChild(val);
+                    }
+                    break;
                 case "list":
                     {
                         let val = document.createElement("tmpl-list-input");
@@ -1016,6 +1027,14 @@ function generateConfig(config) {
                         let select = param_element.firstElementChild;
                         let value = select.value;
                         config[page_name][param_name]["value"] = value;
+                    }
+                    break;
+                case "tmpl-keybind-input":
+                    {
+                        /** @type {HTMLButtonElement} */ // @ts-ignore
+                        let button = param_element.firstElementChild;
+                        config[page_name][param_name]["value"] =
+                            button.dataset.key ?? "";
                     }
                     break;
                 case "tmpl-list-input":
