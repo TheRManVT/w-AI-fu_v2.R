@@ -12,7 +12,8 @@ The original repo is available [here](https://github.com/wAIfu-DEV/w-AI-fu_v2) (
 - You get a JavaScript error when starting w-AI-fu
   - **SHOULD** be fixed in this version*
 - You get stuck on "Creating Electron window" after restarting
-  - Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
+  - This is only happens sometimes. Try restarting the program again.
+    (Workaround) Run venv-Delete.bat, which deletes the venv-folder inside source/app/vectordb
 - I want to use NovelAI but they changed their API endpoint
   - First, move the original and the".dist-info"-folder to a different place, then activate the venv via opening the terminal in the root folder and put this command in:
 ```
